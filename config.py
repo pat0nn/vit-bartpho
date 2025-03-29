@@ -22,13 +22,14 @@ GROUNDTRUTH_FILE = '/kaggle/working/vit-bartpho/data/groundtruth_captions.json'
 # Training parameters
 MAX_TARGET_LENGTH = 64
 SEED = 42
-BATCH_SIZE = 4
-EVAL_BATCH_SIZE = 4
+BATCH_SIZE = 8
+EVAL_BATCH_SIZE = 8
 WEIGHT_DECAY = 1e-6
 USE_FP16 = True
+NUM_EPOCHS = 8
 
 # Quick testing/subset parameters
-USE_SUBSET = True  # Set to True for quick testing with subset of data
+USE_SUBSET = False  # Set to True for quick testing with subset of data
 TRAIN_SUBSET_SIZE = 5  # Number of samples to use from training set
 TEST_SUBSET_SIZE = 5    # Number of samples to use from test set
 
