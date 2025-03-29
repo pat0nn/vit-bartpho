@@ -17,7 +17,7 @@ TEST_DATA_PATH = '/kaggle/input/ktvic-bartpho/data/test_data.json'
 TRAIN_IMAGES_DIR = '/kaggle/input/ktvic-bartpho/data/train-images'
 TEST_IMAGES_DIR = '/kaggle/input/ktvic-bartpho/data/public-test-images'
 
-GROUNDTRUTH_FILE = '/kaggle/working/ViT-BARTpho/data/groundtruth_captions.json'
+GROUNDTRUTH_FILE = '/kaggle/working/vit-bartpho/data/groundtruth_captions.json'
 
 # Training parameters
 MAX_TARGET_LENGTH = 64
