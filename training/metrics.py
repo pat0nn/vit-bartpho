@@ -30,6 +30,8 @@ def save_predictions_to_json(predictions, image_ids, output_file, groundtruth_fi
         image_ids = load_groundtruth_ids(groundtruth_file)
     
     
+    print(f"Image IDs: {image_ids}")
+    
     # Map predictions to image IDs
 
     for i, pred in enumerate(predictions):
@@ -90,17 +92,17 @@ def evaluate_from_files(groundtruth_file, prediction_file):
     pred_ids = set(pred_captions.keys())
     common_ids = gt_ids.intersection(pred_ids)
     
-    # if len(common_ids) == 0:
-    #     print("CẢNH BÁO: Không tìm thấy image_id chung giữa hai file!")
-    #     return {}
+    if len(common_ids) == 0:
+        print("CẢNH BÁO: Không tìm thấy image_id chung giữa hai file!")
+        return {}
     
-    # print(f"Số lượng image trong groundtruth: {len(gt_ids)}")
-    # print(f"Số lượng image trong prediction: {len(pred_ids)}")
-    # print(f"Số lượng image chung để đánh giá: {len(common_ids)}")
+    print(f"Số lượng image trong groundtruth: {len(gt_ids)}")
+    print(f"Số lượng image trong prediction: {len(pred_ids)}")
+    print(f"Số lượng image chung để đánh giá: {len(common_ids)}")
     
-    # if len(common_ids) < len(gt_ids) or len(common_ids) < len(pred_ids):
-    #     print(f"Cảnh báo: Có {len(gt_ids) - len(common_ids)} ảnh từ groundtruth không có trong prediction")
-    #     print(f"Cảnh báo: Có {len(pred_ids) - len(common_ids)} ảnh từ prediction không có trong groundtruth")
+    if len(common_ids) < len(gt_ids) or len(common_ids) < len(pred_ids):
+        print(f"Cảnh báo: Có {len(gt_ids) - len(common_ids)} ảnh từ groundtruth không có trong prediction")
+        print(f"Cảnh báo: Có {len(pred_ids) - len(common_ids)} ảnh từ prediction không có trong groundtruth")
     
     # Lọc để chỉ giữ các image_id chung
     filtered_gt = {id: gt_captions[id] for id in common_ids}

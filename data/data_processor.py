@@ -59,27 +59,30 @@ def process_train_val_data(data, images_dir=TRAIN_IMAGES_DIR):
     return records
 
 def process_test_data(data, images_dir=TEST_IMAGES_DIR):
-    """Process the test data to create the desired structure."""
-    # Extract images data
+    """Process the test data to create the desired structure, selecting only the first caption for each image."""
     records = []
     
-    for i, img in enumerate(data['images']):
-        # Extract image_id from filename
+    # Create a mapping of image_id to segment_caption
+    image_captions = {}
+    for annotation in data['annotations']:
+        image_id = annotation['image_id']
+        if image_id not in image_captions:
+            image_captions[image_id] = annotation.get('segment_caption', '')
+    
+    # Process images
+    for img in data['images']:
         filename = img['filename']
         image_id = int(os.path.splitext(filename)[0])
+        caption = image_captions.get(image_id, '')
         
-        # Process the corresponding annotation if available
-        if i < len(data['annotations']):
-            caption = data['annotations'][i].get('segment_caption', '')
-            
-            record = {
-                'image_id': image_id,
-                'caption_id': i,
-                'caption': caption,
-                'file_name': filename,
-                'image_path': os.path.join(images_dir, filename)
-            }
-            records.append(record)
+        record = {
+            'image_id': image_id,
+            'caption_id': image_id,  
+            'caption': caption,
+            'file_name': filename,
+            'image_path': os.path.join(images_dir, filename)
+        }
+        records.append(record)
     
     return records
 

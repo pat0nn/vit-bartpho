@@ -47,6 +47,19 @@ def setup_training(model, feature_extractor, tokenizer, dataset, metrics_calcula
     eval_dataset = ImageCaptioningDataset(
         dataset, 'test', tokenizer, feature_extractor, config.MAX_TARGET_LENGTH)
     
+    # Log subset usage information
+    if config.USE_SUBSET:
+        print(f"Using subset of data for quick testing:")
+        print(f"  - Training samples: {len(train_dataset)} (from {len(dataset['train'])})")
+        print(f"  - Evaluation samples: {len(eval_dataset)} (from {len(dataset['test'])})")
+        
+        # Log to wandb if enabled
+        if use_wandb:
+            wandb.config.update({
+                "use_subset": config.USE_SUBSET,
+                "train_subset_size": len(train_dataset),
+                "test_subset_size": len(eval_dataset)
+            })
 
     # Configure report_to based on wandb availability
     report_to = "wandb" if use_wandb else "none"
@@ -72,6 +85,7 @@ def setup_training(model, feature_extractor, tokenizer, dataset, metrics_calcula
     groundtruth_file = config.GROUNDTRUTH_FILE if hasattr(config, 'GROUNDTRUTH_FILE') else None
     eval_output_dir = os.path.join(config.OUTPUT_DIR, "eval")
     
+    print(f"Using groundtruth file: {groundtruth_file}")
     # Configure callbacks
     
     epoch_callback = EpochTrackingCallback()
