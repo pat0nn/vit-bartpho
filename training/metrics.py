@@ -30,7 +30,6 @@ def save_predictions_to_json(predictions, image_ids, output_file, groundtruth_fi
         image_ids = load_groundtruth_ids(groundtruth_file)
     
     
-    print(f"Image IDs: {image_ids}")
     
     # Map predictions to image IDs
 
