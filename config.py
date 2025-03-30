@@ -26,7 +26,6 @@ BATCH_SIZE = 8
 EVAL_BATCH_SIZE = 8
 WEIGHT_DECAY = 1e-6
 USE_FP16 = True
-NUM_EPOCHS = 8
 
 # Quick testing/subset parameters
 USE_SUBSET = False  # Set to True for quick testing with subset of data

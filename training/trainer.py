@@ -75,7 +75,6 @@ def setup_training(model, feature_extractor, tokenizer, dataset, metrics_calcula
         output_dir=config.OUTPUT_DIR,
         report_to=report_to,
         fp16=config.USE_FP16,
-        num_train_epochs=config.NUM_EPOCHS,
         weight_decay=config.WEIGHT_DECAY,
         logging_dir=config.LOGS_DIR,
         logging_strategy="epoch",
