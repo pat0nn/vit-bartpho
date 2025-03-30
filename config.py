@@ -40,7 +40,7 @@ NUM_BEAMS = 3
 DATASET_SAVE_PATH = './dataset/image_caption_dataset'
 OUTPUT_DIR = './output'
 LOGS_DIR = './logs'
-WANDB_PROJECT = "ViT-BARTpho"
+WANDB_PROJECT = "ViT-BARTpho_3-30"
 WANDB_NAME = "experiment"
 
 # Device
