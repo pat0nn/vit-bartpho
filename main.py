@@ -21,7 +21,8 @@ from data.data_processor import prepare_dataset, load_from_disk
 from models.model_config import load_model_and_processors, load_model_from_checkpoint
 from training.trainer import initialize_wandb, setup_training, train_model
 from inference.predict import generate_caption, display_image_with_caption, batch_generate_captions, save_results_to_json
-from config import DATASET_SAVE_PATH, WANDB_PROJECT, WANDB_NAME, NUM_BEAMS, MAX_LENGTH
+from config import DATASET_SAVE_PATH, WANDB_PROJECT, WANDB_NAME, NUM_BEAMS, MAX_LENGTH, USE_SEGMENT_CAPTION
+import config
 
 def setup_wandb():
     """
@@ -47,6 +48,10 @@ def setup_wandb():
 
 def train(args):
     """Train the model."""
+    # Update config with command-line args
+    config.USE_SEGMENT_CAPTION = args.use_segment_caption
+    print(f"Using {'segment_caption' if config.USE_SEGMENT_CAPTION else 'caption'} field for training")
+    
     print("Preparing dataset...")
     if os.path.exists(args.dataset_path) and not args.force_preprocess:
         dataset = load_from_disk(args.dataset_path)
@@ -73,6 +78,10 @@ def train(args):
 
 def inference(args):
     """Run inference on a single image."""
+    # Update config with command-line args
+    config.USE_SEGMENT_CAPTION = args.use_segment_caption
+    print(f"Using {'segment_caption' if config.USE_SEGMENT_CAPTION else 'caption'} field for inference")
+    
     if args.checkpoint_path:
         print(f"Loading model from checkpoint: {args.checkpoint_path}")
         model, feature_extractor, tokenizer = load_model_from_checkpoint(args.checkpoint_path)
@@ -97,6 +106,10 @@ def inference(args):
 
 def batch_inference(args):
     """Run inference on the test dataset."""
+    # Update config with command-line args
+    config.USE_SEGMENT_CAPTION = args.use_segment_caption
+    print(f"Using {'segment_caption' if config.USE_SEGMENT_CAPTION else 'caption'} field for inference")
+    
     print("Loading dataset...")
     if os.path.exists(args.dataset_path):
         dataset = load_from_disk(args.dataset_path)
@@ -192,6 +205,12 @@ def parse_arguments():
         "--force_preprocess", 
         action="store_true",
         help="Force preprocessing of data even if dataset exists"
+    )
+    parser.add_argument(
+        "--use_segment_caption", 
+        type=bool, 
+        default=True,
+        help="Use 'segment_caption' field (True) or 'caption' field (False)"
     )
     
     # Inference parameters

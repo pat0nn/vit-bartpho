@@ -8,7 +8,7 @@ from datasets import Dataset, DatasetDict, load_from_disk
 import sys
 
 sys.path.append('..')
-from config import TRAIN_DATA_PATH, TEST_DATA_PATH, TRAIN_IMAGES_DIR, TEST_IMAGES_DIR, DATASET_SAVE_PATH, SEED
+from config import TRAIN_DATA_PATH, TEST_DATA_PATH, TRAIN_IMAGES_DIR, TEST_IMAGES_DIR, DATASET_SAVE_PATH, SEED, USE_SEGMENT_CAPTION
 
 def load_data(json_path):
     """Load data from JSON file."""
@@ -44,8 +44,11 @@ def process_train_val_data(data, images_dir=TRAIN_IMAGES_DIR):
             image_id = data['images'][i // 5]['id'] if 'id' in data['images'][i // 5] else int(os.path.splitext(data['images'][i // 5]['filename'])[0])
         
         if image_id in images:
-            # Use segment_caption instead of caption
-            caption = ann.get('segment_caption', '')
+            # Select caption based on configuration
+            if USE_SEGMENT_CAPTION:
+                caption = ann.get('segment_caption', '')
+            else:
+                caption = ann.get('caption', '')
             
             record = {
                 'image_id': image_id,
@@ -62,12 +65,15 @@ def process_test_data(data, images_dir=TEST_IMAGES_DIR):
     """Process the test data to create the desired structure, selecting only the first caption for each image."""
     records = []
     
-    # Create a mapping of image_id to segment_caption
+    # Create a mapping of image_id to caption based on configuration
     image_captions = {}
     for annotation in data['annotations']:
         image_id = annotation['image_id']
         if image_id not in image_captions:
-            image_captions[image_id] = annotation.get('segment_caption', '')
+            if USE_SEGMENT_CAPTION:
+                image_captions[image_id] = annotation.get('segment_caption', '')
+            else:
+                image_captions[image_id] = annotation.get('caption', '')
     
     # Process images
     for img in data['images']:

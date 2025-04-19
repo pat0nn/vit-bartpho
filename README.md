@@ -70,6 +70,16 @@ Before running the project, you may want to adjust the configuration parameters 
 - Output directories
 - Weights & Biases project name
 
+### Key Configuration Parameters
+
+- `IMAGE_ENCODER_MODEL`: Pre-trained ViT model to use as the image encoder
+- `TEXT_DECODER_MODEL`: Pre-trained BARTpho model to use as the text decoder
+- `USE_SEGMENT_CAPTION`: If True, use the 'segment_caption' field from the dataset. If False, use the 'caption' field
+- `BATCH_SIZE`: Batch size for training
+- `MAX_TARGET_LENGTH`: Maximum length of target captions
+- `NUM_BEAMS`: Number of beams for beam search during inference
+- `MAX_LENGTH`: Maximum length of generated captions
+
 ## Dataset Preparation
 
 The project expects a dataset with image-caption pairs. By default, it should be organized as follows:
@@ -106,6 +116,10 @@ python main.py --mode train --dataset_path /path/to/dataset
 # Force reprocessing of the dataset
 python main.py --mode train --force_preprocess
 
+# Choose which caption field to use (segment_caption or caption)
+python main.py --mode train --use_segment_caption True  # Use segment_caption field (default)
+python main.py --mode train --use_segment_caption False  # Use caption field
+
 # Train with a specific experiment name for tracking
 python main.py --mode train --use_wandb --experiment_name my_experiment
 ```
@@ -122,6 +136,10 @@ Options for inference:
 ```bash
 # Use a specific checkpoint
 python main.py --mode inference --image_path path/to/image.jpg --checkpoint_path path/to/checkpoint
+
+# Choose which caption field to use for evaluation (must match training setting)
+python main.py --mode inference --image_path path/to/image.jpg --use_segment_caption True  # Use segment_caption field (default)
+python main.py --mode inference --image_path path/to/image.jpg --use_segment_caption False  # Use caption field
 
 # Adjust beam search parameters
 python main.py --mode inference --image_path path/to/image.jpg --num_beams 5 --max_length 50
@@ -140,6 +158,10 @@ This is useful for evaluating model performance across the test set. Additional 
 ```bash
 # Try different beam sizes and compare results
 python main.py --mode batch_inference --beam_range --min_beams 1 --max_beams 5
+
+# Choose which caption field to use for evaluation (must match training setting)
+python main.py --mode batch_inference --use_segment_caption True  # Use segment_caption field (default)
+python main.py --mode batch_inference --use_segment_caption False  # Use caption field
 
 # Use a specific checkpoint
 python main.py --mode batch_inference --checkpoint_path path/to/checkpoint
