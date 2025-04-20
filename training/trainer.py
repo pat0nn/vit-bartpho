@@ -84,6 +84,7 @@ def setup_training(model, feature_extractor, tokenizer, dataset, metrics_calcula
         per_device_train_batch_size=config.BATCH_SIZE,
         per_device_eval_batch_size=config.EVAL_BATCH_SIZE,
         output_dir=config.OUTPUT_DIR,
+        num_train_epochs=config.NUM_EPOCHS,
         report_to=report_to,
         fp16=config.USE_FP16,
         weight_decay=config.WEIGHT_DECAY,
