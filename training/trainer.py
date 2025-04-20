@@ -116,7 +116,17 @@ def setup_training(model, feature_extractor, tokenizer, dataset, metrics_calcula
     
     callbacks = [epoch_callback]
     if use_wandb:
-        callbacks.append(WandbModelCheckpointCallback())
+        # Create WandbModelCheckpointCallback with optimized settings for Kaggle
+        # Save the best model based on CIDEr score (or alternative metric)
+        wandb_callback = WandbModelCheckpointCallback(
+            save_best_only=True,
+            metric_name="model_CIDEr",  # Use CIDEr as primary metric for image captioning
+            remove_optimizer=True,      # Remove optimizer.pt to save space
+            save_optimizer_separately=False,  # Don't save optimizer separately
+            artifact_type="model"       # Artifact type
+        )
+        callbacks.append(wandb_callback)
+        print("Configured wandb callback to save checkpoints, remove optimizer.pt, and track best model by CIDEr score")
     
     # Use CustomTrainer with direct model generation metrics
     trainer = CustomTrainer(
@@ -150,6 +160,7 @@ class CustomTrainer(Seq2SeqTrainer):
         self.num_beams = kwargs.pop('num_beams', 3)
         self.max_length = kwargs.pop('max_length', 24)
         self.skip_spice = kwargs.pop('skip_spice', True)
+        self.use_wandb = kwargs.get('args', None) and kwargs['args'].report_to == 'wandb'
         super().__init__(*args, **kwargs)
     
     def evaluate(self, *args, **kwargs):
@@ -186,6 +197,51 @@ class CustomTrainer(Seq2SeqTrainer):
             # Update metrics with model-based ones
             for k, v in model_metrics.items():
                 metrics[f"model_{k}"] = v
+            
+            # Log specific metrics to console
+            print(f"\n{'='*50}\nModel Metrics (Epoch {epoch}):")
+            for key, val in model_metrics.items():
+                print(f"{key}: {val:.4f}")
+            print(f"{'='*50}\n")
+            
+            # Log to wandb if enabled
+            if self.use_wandb:
+                try:
+                    # Log metrics separately to make them easier to track in wandb
+                    wandb_metrics = {}
+                    
+                    # Define key metrics to track with more descriptive names
+                    metrics_to_log = {
+                        "BLEU-1": "Bleu-1 Score",
+                        "BLEU-2": "Bleu-2 Score",
+                        "BLEU-3": "Bleu-3 Score",
+                        "BLEU-4": "Bleu-4 Score",
+                        "METEOR": "METEOR Score",
+                        "ROUGE_L": "ROUGE-L Score",
+                        "CIDEr": "CIDEr Score"
+                    }
+                    
+                    # Extract metrics and prepare for logging
+                    for metric_key, display_name in metrics_to_log.items():
+                        if metric_key in model_metrics:
+                            wandb_metrics[f"caption_metrics/{metric_key}"] = model_metrics[metric_key]
+                    
+                    # Add a summary metric for easier tracking
+                    if "CIDEr" in model_metrics and "BLEU-4" in model_metrics:
+                        bleu4 = model_metrics.get("BLEU-4", 0)
+                        cider = model_metrics.get("CIDEr", 0)
+                        # Combined score often used in image captioning papers
+                        wandb_metrics["caption_metrics/Combined_Score"] = (bleu4 + cider) / 2
+                    
+                    # Log current epoch
+                    if epoch is not None:
+                        wandb_metrics["epoch"] = epoch
+                    
+                    # Log to wandb
+                    wandb.log(wandb_metrics)
+                    print(f"Successfully logged metrics to Weights & Biases.")
+                except Exception as e:
+                    print(f"Error logging to wandb: {e}")
         
         return metrics
 
