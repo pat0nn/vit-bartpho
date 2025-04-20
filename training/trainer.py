@@ -120,7 +120,7 @@ def setup_training(model, feature_extractor, tokenizer, dataset, metrics_calcula
         # Save the best model based on CIDEr score (or alternative metric)
         wandb_callback = WandbModelCheckpointCallback(
             save_best_only=True,
-            metric_name="model_CIDEr",  # Use CIDEr as primary metric for image captioning
+            metric_name="eval_CIDEr",  # Use CIDEr as primary metric for image captioning
             remove_optimizer=True,      # Remove optimizer.pt to save space
             save_optimizer_separately=False,  # Don't save optimizer separately
             artifact_type="model"       # Artifact type
@@ -194,52 +194,61 @@ class CustomTrainer(Seq2SeqTrainer):
                 subset_size=subset_size
             )
             
-            # Update metrics with model-based ones
-            for k, v in model_metrics.items():
-                metrics[f"model_{k}"] = v
-            
             # Log specific metrics to console
             print(f"\n{'='*50}\nModel Metrics (Epoch {epoch}):")
             for key, val in model_metrics.items():
                 print(f"{key}: {val:.4f}")
             print(f"{'='*50}\n")
             
+            # Define key metrics to track
+            metrics_to_log = {
+                "BLEU-1": "BLEU@1",
+                "BLEU-2": "BLEU@2", 
+                "BLEU-3": "BLEU@3",
+                "BLEU-4": "BLEU@4",
+                "METEOR": "METEOR",
+                "ROUGE_L": "ROUGE_L",
+                "CIDEr": "CIDEr"
+            }
+            
+            # Add metrics to the main metrics dictionary (this will be stored in state.metrics)
+            for metric_key, display_name in metrics_to_log.items():
+                if metric_key in model_metrics:
+                    # Add to both the main metrics dictionary and with model_ prefix for backward compatibility
+                    metrics[f"eval_{display_name}"] = model_metrics[metric_key]
+                    metrics[f"model_{metric_key}"] = model_metrics[metric_key]
+            
+            # Add a combined score often used in image captioning papers
+            if "CIDEr" in model_metrics and "BLEU-4" in model_metrics:
+                bleu4 = model_metrics.get("BLEU-4", 0)
+                cider = model_metrics.get("CIDEr", 0)
+                combined_score = (bleu4 + cider) / 2
+                metrics["eval_Combined_Score"] = combined_score
+                metrics["model_Combined_Score"] = combined_score
+            
             # Log to wandb if enabled
             if self.use_wandb:
                 try:
-                    # Log metrics separately to make them easier to track in wandb
+                    # Create a separate dict for wandb to include both formats
                     wandb_metrics = {}
                     
-                    # Define key metrics to track with more descriptive names
-                    metrics_to_log = {
-                        "BLEU-1": "Bleu-1 Score",
-                        "BLEU-2": "Bleu-2 Score",
-                        "BLEU-3": "Bleu-3 Score",
-                        "BLEU-4": "Bleu-4 Score",
-                        "METEOR": "METEOR Score",
-                        "ROUGE_L": "ROUGE-L Score",
-                        "CIDEr": "CIDEr Score"
-                    }
+                    # Copy all metrics for wandb (including standard ones)
+                    for k, v in metrics.items():
+                        wandb_metrics[k] = v
                     
-                    # Extract metrics and prepare for logging
+                    # Also add to caption_metrics category for better organization
                     for metric_key, display_name in metrics_to_log.items():
                         if metric_key in model_metrics:
+                            # Add the metric to a category for organization in wandb UI
                             wandb_metrics[f"caption_metrics/{metric_key}"] = model_metrics[metric_key]
                     
-                    # Add a summary metric for easier tracking
-                    if "CIDEr" in model_metrics and "BLEU-4" in model_metrics:
-                        bleu4 = model_metrics.get("BLEU-4", 0)
-                        cider = model_metrics.get("CIDEr", 0)
-                        # Combined score often used in image captioning papers
-                        wandb_metrics["caption_metrics/Combined_Score"] = (bleu4 + cider) / 2
-                    
-                    # Log current epoch
+                    # Add epoch info
                     if epoch is not None:
                         wandb_metrics["epoch"] = epoch
                     
                     # Log to wandb
                     wandb.log(wandb_metrics)
-                    print(f"Successfully logged metrics to Weights & Biases.")
+                    print(f"Successfully logged {len(wandb_metrics)} metrics to Weights & Biases.")
                 except Exception as e:
                     print(f"Error logging to wandb: {e}")
         

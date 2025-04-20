@@ -13,7 +13,7 @@ class WandbModelCheckpointCallback(TrainerCallback):
     - Deletes local checkpoints after uploading to save space
     """
     
-    def __init__(self, save_best_only=False, metric_name="eval_loss", artifact_type="model", 
+    def __init__(self, save_best_only=False, metric_name="eval_CIDEr", artifact_type="model", 
                  remove_optimizer=True, save_optimizer_separately=False):
         """
         Initialize the callback.
@@ -30,8 +30,19 @@ class WandbModelCheckpointCallback(TrainerCallback):
         self.artifact_type = artifact_type
         self.remove_optimizer = remove_optimizer
         self.save_optimizer_separately = save_optimizer_separately
-        self.best_metric = float('inf')  # For minimizing metrics like loss
+        self.best_metric = float('-inf') if self._is_higher_better(metric_name) else float('inf')
         self.best_step = None
+    
+    def _is_higher_better(self, metric_name):
+        """Determine if a metric is better when higher or lower"""
+        # For these metrics, higher is better
+        higher_better_prefixes = [
+            "eval_BLEU", "eval_METEOR", "eval_ROUGE", "eval_CIDEr", 
+            "model_BLEU", "model_METEOR", "model_ROUGE", "model_CIDEr",
+            "eval_Combined", "model_Combined", "eval_accuracy"
+        ]
+        
+        return any(metric_name.startswith(prefix) for prefix in higher_better_prefixes)
     
     def on_save(self, args, state, control, **kwargs):
         """
@@ -71,8 +82,7 @@ class WandbModelCheckpointCallback(TrainerCallback):
                 is_better = current_metric < self.best_metric
                 
                 # Some metrics are higher-is-better (accuracy, BLEU, etc.)
-                if self.metric_name.startswith(("eval_accuracy", "eval_BLEU", "eval_METEOR", 
-                                              "eval_ROUGE", "eval_CIDEr", "eval_model_")):
+                if self._is_higher_better(self.metric_name):
                     is_better = current_metric > self.best_metric
                 
                 if is_better:
@@ -128,7 +138,8 @@ class WandbModelCheckpointCallback(TrainerCallback):
             artifact = wandb.Artifact(
                 name=artifact_name,
                 type=self.artifact_type,
-                description=f"Model checkpoint at step {state.global_step} (epoch {state.epoch:.1f if hasattr(state, 'epoch') and state.epoch is not None else 'unknown'})"
+                description=f"Model checkpoint at step {state.global_step}" + 
+                           (f" (epoch {state.epoch:.1f})" if hasattr(state, 'epoch') and state.epoch is not None else " (epoch unknown)")
             )
             
             # Add metadata about the training state
@@ -234,7 +245,7 @@ class EpochTrackingCallback(TrainerCallback):
     def on_epoch_begin(self, args, state, control, **kwargs):
         """Called at the beginning of each epoch"""
         # Update current epoch
-        if state.epoch is not None:
+        if hasattr(state, 'epoch') and state.epoch is not None:
             self.current_epoch = int(state.epoch)
         else:
             self.current_epoch += 1
