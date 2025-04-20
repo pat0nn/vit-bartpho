@@ -60,7 +60,10 @@ class WandbModelCheckpointCallback(TrainerCallback):
             return control
         
         # Check if we should save this checkpoint based on metrics
-        if self.save_best_only and state.metrics:
+        # First check if metrics attribute exists and is not empty
+        has_metrics = hasattr(state, 'metrics') and state.metrics
+        
+        if self.save_best_only and has_metrics:
             current_metric = state.metrics.get(self.metric_name)
             
             if current_metric is not None:
@@ -82,9 +85,13 @@ class WandbModelCheckpointCallback(TrainerCallback):
                     print(f"Removing checkpoint directory: {checkpoint_path}")
                     shutil.rmtree(checkpoint_path)
                     return control
+        elif self.save_best_only and not has_metrics:
+            # If we're supposed to save only the best model but don't have metrics yet,
+            # log the info and continue saving this checkpoint
+            print(f"Note: save_best_only=True but no metrics available yet. Saving checkpoint at step {state.global_step}.")
         
         # Log the epoch if available
-        epoch_info = f"epoch_{state.epoch:.1f}_" if state.epoch is not None else ""
+        epoch_info = f"epoch_{state.epoch:.1f}_" if hasattr(state, 'epoch') and state.epoch is not None else ""
         
         # Create artifact name with informative naming
         artifact_name = f"model-{epoch_info}step-{state.global_step}"
@@ -121,14 +128,15 @@ class WandbModelCheckpointCallback(TrainerCallback):
             artifact = wandb.Artifact(
                 name=artifact_name,
                 type=self.artifact_type,
-                description=f"Model checkpoint at step {state.global_step} (epoch {state.epoch:.1f if state.epoch is not None else 'unknown'})"
+                description=f"Model checkpoint at step {state.global_step} (epoch {state.epoch:.1f if hasattr(state, 'epoch') and state.epoch is not None else 'unknown'})"
             )
             
             # Add metadata about the training state
-            metrics_dict = state.metrics.copy() if state.metrics else {}
-            for key, value in metrics_dict.items():
-                if isinstance(value, (int, float)):
-                    artifact.metadata[key] = value
+            if has_metrics:
+                metrics_dict = state.metrics.copy()
+                for key, value in metrics_dict.items():
+                    if isinstance(value, (int, float)):
+                        artifact.metadata[key] = value
             
             # Add optimizer info to metadata
             artifact.metadata["optimizer_included"] = not self.remove_optimizer
@@ -191,10 +199,19 @@ class WandbModelCheckpointCallback(TrainerCallback):
                     )
                     
                     # Add metadata about the training state
-                    if state.metrics:
+                    has_metrics = hasattr(state, 'metrics') and state.metrics
+                    if has_metrics:
                         for key, value in state.metrics.items():
                             if isinstance(value, (int, float)):
                                 artifact.metadata[key] = value
+                    
+                    # Add training step information
+                    if hasattr(state, 'global_step'):
+                        artifact.metadata["global_step"] = state.global_step
+                    
+                    # Add epoch information
+                    if hasattr(state, 'epoch') and state.epoch is not None:
+                        artifact.metadata["epoch"] = state.epoch
                     
                     artifact.add_dir(final_model_path, name="model")
                     wandb.log_artifact(artifact)
