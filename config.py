@@ -39,7 +39,7 @@ NUM_EPOCHS = 10
 USE_SEGMENT_CAPTION = True  # Set to True to use segment_caption, False to use caption
 
 # Quick testing/subset parameters
-USE_SUBSET = True  # Set to True for quick testing with subset of data
+USE_SUBSET = False  # Set to True for quick testing with subset of data
 TRAIN_SUBSET_SIZE = 300  # Number of samples to use from training set
 TEST_SUBSET_SIZE = 300    # Number of samples to use from test set
 
@@ -51,7 +51,7 @@ NUM_BEAMS = 3
 DATASET_SAVE_PATH = './dataset/image_caption_dataset'
 OUTPUT_DIR = './output'
 LOGS_DIR = './logs'
-WANDB_PROJECT = "ViT-BARTpho_UIT-ViIC_4-19_original-caption"
+WANDB_PROJECT = "ViT-BARTpho_UIT-ViIC_4-19_segment-caption"
 WANDB_NAME = "experiment"
 
 # Device
