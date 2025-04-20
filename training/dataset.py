@@ -71,6 +71,8 @@ class ImageCaptioningDataset(torch.utils.data.Dataset):
         If `check_image` is `True`, the examples that fails during `Image.open()` will be caught and discarded.
         Otherwise, an exception will be thrown.
         """
+
+
         image = Image.open(image_path).convert('RGB')
         encoder_inputs = self.feature_extractor(images=image, return_tensors="np")
         return encoder_inputs.pixel_values[0]
