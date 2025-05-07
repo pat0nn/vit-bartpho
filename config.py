@@ -24,8 +24,10 @@ MAX_TARGET_LENGTH = 64
 SEED = 42
 BATCH_SIZE = 8
 EVAL_BATCH_SIZE = 8
-WEIGHT_DECAY = 1e-6
+WEIGHT_DECAY = 0.01
 USE_FP16 = True
+LEARNING_RATE = 3e-5
+NUM_EPOCHS = 10
 
 # Quick testing/subset parameters
 USE_SUBSET = False  # Set to True for quick testing with subset of data
