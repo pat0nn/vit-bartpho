@@ -29,6 +29,12 @@ class WandbModelCheckpointCallback(TrainerCallback):
         
         # Ensure the checkpoint directory exists
         if os.path.exists(checkpoint_path):
+            # Delete optimizer.pt file before uploading to wandb
+            optimizer_path = os.path.join(checkpoint_path, "optimizer.pt")
+            if os.path.exists(optimizer_path):
+                os.remove(optimizer_path)
+                print(f"Removed optimizer.pt from checkpoint-{state.global_step}")
+            
             # Create and save wandb artifact
             artifact = wandb.Artifact(
                 name=f"model-checkpoint-{state.global_step}", 
