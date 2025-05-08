@@ -84,7 +84,6 @@ def setup_training(model, feature_extractor, tokenizer, dataset, metrics_calcula
         logging_strategy="epoch",
         logging_steps=100,
         optim="adamw_torch",  # AdamW optimizer as specified
-        lr_scheduler_power=0.85,  # Linear decay rate of 0.85 as specified
     )
     
         # Setup compute_metrics with tokenizer and paths
