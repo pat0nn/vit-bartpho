@@ -70,15 +70,21 @@ def setup_training(model, feature_extractor, tokenizer, dataset, metrics_calcula
         evaluation_strategy="epoch",
         save_strategy="epoch",
         save_total_limit=1,
+        lr_scheduler_type="linear",  # Linear decay as specified
+        warmup_ratio=0.1,
         per_device_train_batch_size=config.BATCH_SIZE,
         per_device_eval_batch_size=config.EVAL_BATCH_SIZE,
         output_dir=config.OUTPUT_DIR,
         report_to=report_to,
         fp16=config.USE_FP16,
-        weight_decay=config.WEIGHT_DECAY,
+        num_train_epochs=10,  # 10 training iterations as specified
+        learning_rate=3e-4,  # Set to 3e-4 as specified
+        weight_decay=0.05,  # Set to 0.05 as specified
         logging_dir=config.LOGS_DIR,
         logging_strategy="epoch",
         logging_steps=100,
+        optim="adamw_torch",  # AdamW optimizer as specified
+        lr_scheduler_power=0.85,  # Linear decay rate of 0.85 as specified
     )
     
         # Setup compute_metrics with tokenizer and paths
