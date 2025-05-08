@@ -1,7 +1,7 @@
 """Configuration parameters for the ViT-BARTpho Image Captioning model."""
 
 # Model configuration
-IMAGE_ENCODER_MODEL = "google/vit-large-patch16-224-in21k"
+IMAGE_ENCODER_MODEL = "Zetatech/pvt-large-224"
 TEXT_DECODER_MODEL = "vinai/bartpho-word"
 
 # # Data paths

@@ -1,7 +1,7 @@
 """Model configuration and initialization."""
 
 import torch
-from transformers import VisionEncoderDecoderModel, AutoTokenizer, ViTImageProcessor
+from transformers import VisionEncoderDecoderModel, AutoTokenizer, PvtImageProcessor
 
 import sys
 sys.path.append('..')
@@ -14,7 +14,7 @@ def load_model_and_processors():
         IMAGE_ENCODER_MODEL, TEXT_DECODER_MODEL)
     
     # Initialize image feature extractor
-    feature_extractor = ViTImageProcessor.from_pretrained(IMAGE_ENCODER_MODEL)
+    feature_extractor = PvtImageProcessor.from_pretrained(IMAGE_ENCODER_MODEL)
     
     # Initialize text tokenizer
     tokenizer = AutoTokenizer.from_pretrained(TEXT_DECODER_MODEL)
@@ -36,7 +36,7 @@ def load_model_and_processors():
 def load_model_from_checkpoint(checkpoint_path):
     """Load model from a checkpoint."""
     # Initialize components from checkpoint
-    feature_extractor = ViTImageProcessor.from_pretrained(checkpoint_path)
+    feature_extractor = PvtImageProcessor.from_pretrained(checkpoint_path)
     model = VisionEncoderDecoderModel.from_pretrained(checkpoint_path)
     tokenizer = AutoTokenizer.from_pretrained(TEXT_DECODER_MODEL)
     
